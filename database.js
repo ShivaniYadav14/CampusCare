@@ -2,7 +2,6 @@
 // NITR CAMPUSCARE — SQLITE DATABASE MODULE
 // ===============================================
 
-const Database = require('better-sqlite3');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
@@ -15,8 +14,13 @@ try {
     const { DatabaseSync } = require('node:sqlite');
     db = new DatabaseSync(DB_PATH);
 } catch (e) {
-    const Database = require('better-sqlite3');
-    db = new Database(DB_PATH);
+    try {
+        const Database = require('better-sqlite3');
+        db = new Database(DB_PATH);
+    } catch (err2) {
+        console.error('Failed to initialize SQLite. Ensure Node.js >= 22.5 is used for built-in node:sqlite.');
+        throw e;
+    }
 }
 
 // Enable WAL mode for better concurrency and foreign keys
