@@ -1,4 +1,32 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "outputDirectory": ".",
+  "buildCommand": "",
+  "headers": [
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://campuscare-6p0z.onrender.com/api/:path*" },
     { "source": "/uploads/:path*", "destination": "https://campuscare-6p0z.onrender.com/uploads/:path*" }

@@ -60,6 +60,24 @@ app.use(express.urlencoded({ extended: true }));
 // Serve Static Uploads and Frontend Files
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(__dirname));
+app.use(express.static(process.cwd()));
+
+// Explicit static asset handler fallback for CSS, JS, fonts, and images
+const STATIC_EXTS = new Set(['.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.html', '.woff', '.woff2', '.ttf']);
+app.use((req, res, next) => {
+    const ext = path.extname(req.path).toLowerCase();
+    if (STATIC_EXTS.has(ext)) {
+        const fileInDir = path.join(__dirname, req.path);
+        const fileInCwd = path.join(process.cwd(), req.path);
+        if (fs.existsSync(fileInDir)) {
+            return res.sendFile(fileInDir);
+        }
+        if (fs.existsSync(fileInCwd)) {
+            return res.sendFile(fileInCwd);
+        }
+    }
+    next();
+});
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -650,7 +668,7 @@ function startServer(port) {
     });
 }
 
-if (!isVercel) {
+if (!isVercel && require.main === module) {
     startServer(process.env.PORT ? parseInt(process.env.PORT, 10) : PORT);
 }
 
