@@ -563,17 +563,202 @@ select.form-input {
 }
 
 /* ================================================================
-   SCROLL REVEAL ANIMATIONS
+   PAGE TRANSITIONS & SCROLL PROGRESS
 ================================================================ */
 
-[data-reveal] {
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
-}
-[data-reveal].is-visible {
+/* Page load subtle entrance (Never hides the body with opacity: 0) */
+body {
     opacity: 1;
-    transform: translateY(0);
+}
+
+/* Ambient Top Scroll Progress Indicator */
+.cc-scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3.5px;
+    background: transparent;
+    z-index: 10001;
+    pointer-events: none;
+}
+
+.cc-scroll-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--nitr-red) 0%, var(--brass) 50%, #2563EB 100%);
+    box-shadow: 0 0 10px rgba(139, 30, 45, 0.6), 0 0 5px rgba(201, 161, 90, 0.5);
+    transition: width 0.08s linear;
+    border-radius: 0 2px 2px 0;
+}
+
+/* Floating Scroll-to-Top Button */
+.cc-scroll-top-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--r-full);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--nitr-red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.85);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cc-scroll-top-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.cc-scroll-top-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.cc-scroll-top-btn:hover {
+    background: var(--nitr-red);
+    color: #ffffff;
+    border-color: var(--nitr-red);
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: var(--shadow-xl), 0 0 16px rgba(139, 30, 45, 0.35);
+}
+
+/* ================================================================
+   SECTION-SPECIFIC SCROLL REVEAL ANIMATIONS
+   Resilient & Accessible: Elements are 100% visible by default!
+================================================================ */
+
+/* Base style: Fully visible by default */
+[data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+/* Only elements actively waiting to enter the viewport are staged */
+.reveal-pending[data-reveal] {
+    opacity: 0;
+}
+
+/* 1. Default Reveal: Smooth vertical elevation */
+.reveal-pending[data-reveal]:not([data-reveal="hero"]):not([data-reveal="stats"]):not([data-reveal="cascade"]):not([data-reveal="slide-left"]):not([data-reveal="slide-right"]):not([data-reveal="media"]):not([data-reveal="form"]):not([data-reveal="faq"]):not([data-reveal="table-row"]):not([data-reveal="timeline"]) {
+    transform: translateY(22px);
+}
+
+/* 2. Hero Section: Cinematic zoom-in with blur dispersion */
+.reveal-pending[data-reveal="hero"] {
+    transform: translateY(24px) scale(0.97);
+    filter: blur(4px);
+}
+
+/* 3. Stats & Metric Counters: Spring-loaded 3D scale flip */
+.reveal-pending[data-reveal="stats"] {
+    transform: translateY(24px) scale(0.92);
+}
+
+/* 4. Service / Category Cards: Cascading tilt & rise */
+.reveal-pending[data-reveal="cascade"] {
+    transform: translateY(22px) scale(0.98);
+}
+
+/* 5. Workflow / Process: Slide from Left */
+.reveal-pending[data-reveal="slide-left"] {
+    transform: translateX(-36px);
+}
+
+/* 6. Workflow / Process: Slide from Right */
+.reveal-pending[data-reveal="slide-right"] {
+    transform: translateX(36px);
+}
+
+/* 7. Media & Campus Video: Cinema curtain focus & zoom */
+.reveal-pending[data-reveal="media"] {
+    transform: scale(0.94) translateY(18px);
+    filter: brightness(0.92);
+}
+
+/* 8. Forms & Auth Panels: Soft spring card unfold */
+.reveal-pending[data-reveal="form"] {
+    transform: translateY(20px) scale(0.98);
+}
+
+/* 9. FAQ Accordions: Smooth upward glide */
+.reveal-pending[data-reveal="faq"] {
+    transform: translateY(18px);
+}
+
+/* 10. Table Rows & Grievance Lists: Sequential wave glide */
+.reveal-pending[data-reveal="table-row"] {
+    transform: translateY(14px);
+}
+
+/* 11. Timeline & Audit Trail Nodes */
+.reveal-pending[data-reveal="timeline"] {
+    transform: translateX(-24px);
+}
+
+/* Active / Revealed State */
+[data-reveal].is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+}
+
+/* Interactive hover on cascade cards */
+[data-reveal="cascade"].is-visible:hover {
+    transform: translateY(-6px) scale(1.02) !important;
+    box-shadow: var(--shadow-xl);
+}
+
+/* Native CSS Scroll-Driven Animation progressive enhancement */
+@media (prefers-reduced-motion: no-preference) {
+    @supports ((animation-timeline: view()) and (animation-range: entry)) {
+        .scroll-driven-fade {
+            animation: viewFadeIn linear backwards;
+            animation-timeline: view();
+            animation-range: entry 10% entry 80%;
+        }
+
+        @keyframes viewFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    }
+}
+
+/* Reduced motion fallback */
+@media (prefers-reduced-motion: reduce) {
+    [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+        transition: none !important;
+    }
+    .cc-page-transition {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    .cc-scroll-progress {
+        display: none !important;
+    }
 }
 
 /* ================================================================

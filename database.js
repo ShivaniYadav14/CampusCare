@@ -9,11 +9,26 @@ const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = path.join(__dirname, 'campuscare.db');
-const db = new Database(DB_PATH);
+
+let db;
+try {
+    const { DatabaseSync } = require('node:sqlite');
+    db = new DatabaseSync(DB_PATH);
+} catch (e) {
+    const Database = require('better-sqlite3');
+    db = new Database(DB_PATH);
+}
 
 // Enable WAL mode for better concurrency and foreign keys
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+try {
+    if (typeof db.pragma === 'function') {
+        db.pragma('journal_mode = WAL');
+        db.pragma('foreign_keys = ON');
+    } else {
+        db.exec('PRAGMA foreign_keys = ON;');
+        db.exec('PRAGMA journal_mode = WAL;');
+    }
+} catch (e) {}
 
 // ===============================================
 // SCHEMA INITIALIZATION

@@ -60,7 +60,7 @@
     <!-- ================= MAIN ================= -->
     <main class="container py-8 complaint-layout">
 
-        <div class="page-header mb-6 no-print" data-reveal>
+        <div class="page-header mb-6 no-print" data-reveal="hero">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
                     <h1 style="font-size: 2rem; margin-bottom: 4px;">Complaint Status</h1>
@@ -87,7 +87,7 @@
 
             <!-- MAIN CARD -->
             <div>
-                <div class="card mb-6">
+                <div class="card mb-6" data-reveal="form" data-reveal-delay="60">
                     <!-- HEADER METADATA -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 24px; gap: 16px; flex-wrap: wrap;">
                         <div>
@@ -124,7 +124,7 @@
                     </div>
 
                     <!-- PHOTO EVIDENCE -->
-                    <div id="evidenceSection" style="display:none;" class="mb-6">
+                    <div id="evidenceSection" style="display:none;" class="mb-6" data-reveal="media">
                         <h3 class="section-subheading">Photo Evidence</h3>
                         <div class="evidence-wrapper">
                             <img id="evidenceImage" alt="Complaint photo evidence" loading="lazy">
@@ -140,13 +140,13 @@
             </div>
 
             <!-- TIMELINE SIDEBAR -->
-            <aside class="sidebar no-print">
+            <aside class="sidebar no-print" data-reveal="slide-right" data-reveal-delay="120">
                 <div class="card" style="background: var(--surface-alt); border: 1px solid var(--line);">
                     <h3 style="font-size: 1.0625rem; margin-bottom: 20px;">Resolution Timeline</h3>
                     
                     <div class="timeline" id="timelineContainer">
                         
-                        <div class="timeline-item active" id="timelineSubmitted">
+                        <div class="timeline-item active" id="timelineSubmitted" data-reveal="timeline" data-reveal-delay="0">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-title">Submitted</div>
@@ -154,7 +154,7 @@
                             </div>
                         </div>
 
-                        <div class="timeline-item" id="timelinePending">
+                        <div class="timeline-item" id="timelinePending" data-reveal="timeline" data-reveal-delay="80">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-title">Pending Review</div>
@@ -162,7 +162,7 @@
                             </div>
                         </div>
 
-                        <div class="timeline-item" id="timelineProgress">
+                        <div class="timeline-item" id="timelineProgress" data-reveal="timeline" data-reveal-delay="160">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-title">In Progress</div>
@@ -170,7 +170,7 @@
                             </div>
                         </div>
 
-                        <div class="timeline-item" id="timelineCompleted">
+                        <div class="timeline-item" id="timelineCompleted" data-reveal="timeline" data-reveal-delay="240">
                             <div class="timeline-dot"></div>
                             <div class="timeline-content">
                                 <div class="timeline-title">Resolved & Closed</div>
