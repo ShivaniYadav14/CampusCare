@@ -7,10 +7,23 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
-const DB_PATH = path.join(__dirname, 'campuscare.db');
+const isVercel = !!(process.env.VERCEL || process.env.NOW_REGION);
+const DB_PATH = isVercel
+    ? path.join('/tmp', 'campuscare.db')
+    : path.join(__dirname, 'campuscare.db');
 
 let db;
 try {
+    if (isVercel) {
+        const srcDb = path.join(__dirname, 'campuscare.db');
+        if (!fs.existsSync(DB_PATH) && fs.existsSync(srcDb)) {
+            try {
+                fs.copyFileSync(srcDb, DB_PATH);
+            } catch (copyErr) {
+                console.warn('Could not copy db to /tmp:', copyErr.message);
+            }
+        }
+    }
     const { DatabaseSync } = require('node:sqlite');
     db = new DatabaseSync(DB_PATH);
 } catch (e) {

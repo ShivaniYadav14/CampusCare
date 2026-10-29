@@ -17,10 +17,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'nitr_campuscare_secret_jwt_2026';
 
-// Ensure uploads folder exists
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Ensure uploads folder exists (use /tmp on Vercel for writable filesystem)
+const isVercel = !!(process.env.VERCEL || process.env.NOW_REGION);
+const UPLOADS_DIR = isVercel
+    ? path.join('/tmp', 'uploads')
+    : path.join(__dirname, 'uploads');
+try {
+    if (!fs.existsSync(UPLOADS_DIR)) {
+        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    }
+} catch (e) {
+    console.warn('Could not create uploads directory:', e.message);
 }
 
 // Multer Storage for Evidence Photos
@@ -53,6 +60,10 @@ app.use(express.urlencoded({ extended: true }));
 // Serve Static Uploads and Frontend Files
 app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // ===============================================
 // REALTIME / SERVER-SENT EVENTS (SSE)
@@ -639,5 +650,9 @@ function startServer(port) {
     });
 }
 
-startServer(process.env.PORT ? parseInt(process.env.PORT, 10) : PORT);
+if (!isVercel) {
+    startServer(process.env.PORT ? parseInt(process.env.PORT, 10) : PORT);
+}
+
+module.exports = app;
 
