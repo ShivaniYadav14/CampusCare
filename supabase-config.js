@@ -3,12 +3,14 @@
 // ===============================================
 
 // Supabase compatibility bridge to self-hosted Node.js + SQLite backend
-let supabaseClient = window.supabaseClient || null;
+var supabaseClient = (typeof window !== 'undefined' && window.supabaseClient)
+    ? window.supabaseClient
+    : null;
 
-if (!supabaseClient && typeof window !== 'undefined') {
-    if (window.CampusCareAPI) {
+if (typeof window !== 'undefined') {
+    if (!supabaseClient && window.CampusCareAPI) {
         supabaseClient = window.supabaseClient;
-    } else {
-        console.log('CampusCare Self-Hosted API Client initializing...');
     }
+    window.supabaseClient = supabaseClient;
 }
+

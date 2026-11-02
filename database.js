@@ -99,6 +99,26 @@ function initSchema() {
     `);
 
     seedDefaultUsers();
+    ensurePresetAccounts();
+}
+
+function ensurePresetAccounts() {
+    try {
+        const email = '125cs0157@nitrkl.ac.in';
+        const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+        const hash = bcrypt.hashSync('Kundan@22', 10);
+        if (existing) {
+            db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, existing.id);
+        } else {
+            const id = crypto.randomUUID();
+            db.prepare(`
+                INSERT INTO users (id, email, password_hash, full_name, roll_number, role)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `).run(id, email, hash, 'Kundan Prasad Raut', '125cs0157', 'student');
+        }
+    } catch (e) {
+        console.warn('Could not sync preset accounts:', e.message);
+    }
 }
 
 // ===============================================
@@ -114,6 +134,11 @@ function seedDefaultUsers() {
         INSERT INTO users (id, email, password_hash, full_name, roll_number, role)
         VALUES (?, ?, ?, ?, ?, ?)
     `);
+
+    // Student: Kundan Prasad Raut
+    const kundanId = crypto.randomUUID();
+    const kundanHash = bcrypt.hashSync('Kundan@22', 10);
+    insertUser.run(kundanId, '125cs0157@nitrkl.ac.in', kundanHash, 'Kundan Prasad Raut', '125cs0157', 'student');
 
     // Student 1
     const student1Id = crypto.randomUUID();

@@ -108,7 +108,8 @@ The server will start at:
 
 | Role | Email | Password | Access Level |
 | :--- | :--- | :--- | :--- |
-| **Student** | `student@nitrkl.ac.in` | `student123` | File & track grievances |
+| **Student** | `125cs0157@nitrkl.ac.in` | `Kundan@22` | File & track grievances |
+| **Student (Demo)** | `student@nitrkl.ac.in` | `student123` | File & track grievances |
 | **Student (Demo)** | `1234@gmail.com` | `1234` | File & track grievances |
 | **Faculty / Admin** | `admin@nitrkl.ac.in` | `admin123` | Full admin & resolution ledger |
 
