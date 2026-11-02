@@ -198,11 +198,12 @@ app.post('/api/auth/register', (req, res) => {
         const userId = crypto.randomUUID();
         const passwordHash = bcrypt.hashSync(password, 10);
         const userRole = (role === 'teacher' || role === 'admin') ? role : 'student';
+        const assignedRoll = roll_number?.trim() || (userRole === 'teacher' ? 'FAC-' + Math.floor(1000 + Math.random() * 9000) : '124CS' + Math.floor(1000 + Math.random() * 9000));
 
         db.prepare(`
             INSERT INTO users (id, email, password_hash, full_name, roll_number, role)
             VALUES (?, ?, ?, ?, ?, ?)
-        `).run(userId, normalizedEmail, passwordHash, full_name.trim(), roll_number?.trim() || '', userRole);
+        `).run(userId, normalizedEmail, passwordHash, full_name.trim(), assignedRoll, userRole);
 
         const token = jwt.sign({ id: userId, email: normalizedEmail, role: userRole }, JWT_SECRET, { expiresIn: '7d' });
 
@@ -212,7 +213,7 @@ app.post('/api/auth/register', (req, res) => {
             role: userRole,
             user_metadata: {
                 full_name: full_name.trim(),
-                roll_number: roll_number?.trim() || '',
+                roll_number: assignedRoll,
                 role: userRole
             }
         };

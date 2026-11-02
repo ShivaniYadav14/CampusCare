@@ -441,6 +441,9 @@
                         role: metadata.role || 'student'
                     };
                     const data = await CampusCareAPI.auth.register(payload);
+                    for (const cb of authStateListeners) {
+                        try { cb('SIGNED_IN', { access_token: data.token, user: data.user }); } catch (e) {}
+                    }
                     return { data: { user: data.user, session: { access_token: data.token } }, error: null };
                 } catch (err) {
                     return { data: { user: null, session: null }, error: err };

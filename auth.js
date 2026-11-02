@@ -68,6 +68,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Helper to safely obtain the Supabase auth client bridge
+    function getAuthClient() {
+        return (typeof window !== "undefined" && window.supabaseClient)
+            || (typeof supabaseClient !== "undefined" ? supabaseClient : null)
+            || (window.CampusCareAPI && window.CampusCareAPI.supabase);
+    }
+
     // ========================================
     // FORM SWITCHING (LOGIN <-> REGISTER)
     // ========================================
@@ -75,16 +82,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const showLoginBtn = document.getElementById("showLogin");
     const loginSection = document.getElementById("loginSection");
     const registerSection = document.getElementById("registerSection");
+    const registerRoleSelect = document.getElementById("registerRole");
+    const rollNumberLabel = document.getElementById("rollNumberLabel");
+    const rollNumberInput = document.getElementById("rollNumber");
 
-    if (showRegisterBtn && showLoginBtn && loginSection && registerSection) {
-        showRegisterBtn.addEventListener("click", () => {
+    function switchToRegister() {
+        if (loginSection && registerSection) {
             loginSection.classList.add("hidden");
             registerSection.classList.remove("hidden");
-        });
+        }
+    }
 
-        showLoginBtn.addEventListener("click", () => {
+    function switchToLogin() {
+        if (loginSection && registerSection) {
             registerSection.classList.add("hidden");
             loginSection.classList.remove("hidden");
+        }
+    }
+
+    if (showRegisterBtn) showRegisterBtn.addEventListener("click", switchToRegister);
+    if (showLoginBtn) showLoginBtn.addEventListener("click", switchToLogin);
+
+    // Support URL routing (e.g. login.html#register or login.html?mode=register)
+    if (window.location.hash === "#register" || new URLSearchParams(window.location.search).get("mode") === "register") {
+        switchToRegister();
+    }
+
+    if (registerRoleSelect && rollNumberLabel && rollNumberInput) {
+        registerRoleSelect.addEventListener("change", () => {
+            if (registerRoleSelect.value === "teacher") {
+                rollNumberLabel.textContent = "Faculty ID / Designation";
+                rollNumberInput.placeholder = "e.g. FAC-001 or Asst. Professor (optional)";
+            } else {
+                rollNumberLabel.textContent = "Roll Number / ID";
+                rollNumberInput.placeholder = "e.g. 124CS0001 (optional for faculty)";
+            }
         });
     }
 
@@ -98,7 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!supabaseClient) {
+            const client = getAuthClient();
+            if (!client) {
                 if (window.CampusCare) CampusCare.toast("Authentication service unavailable.", "error");
                 return;
             }
@@ -131,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                const { data, error } = await client.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
@@ -148,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (window.CampusCare) CampusCare.toast("Signed in successfully!", "success");
 
                 setTimeout(() => {
-                    const role = data.user?.user_metadata?.role;
+                    const role = data.user?.role || data.user?.user_metadata?.role;
                     if (role === 'admin' || role === 'teacher') {
                         window.location.href = "teacher-dashboard.html";
                     } else {
@@ -181,27 +214,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (registerForm) {
         registerForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!supabaseClient) return;
-
-            const name = document.getElementById("registerName")?.value.trim();
-            const email = document.getElementById("registerEmail")?.value.trim();
-            const rollNumber = document.getElementById("rollNumber")?.value.trim();
-            const password = registerPasswordInput?.value;
-
-            if (!name || !email || !rollNumber || !password) {
+            const client = getAuthClient();
+            if (!client) {
+                if (window.CampusCare) CampusCare.toast("Authentication service initializing. Please retry in a moment.", "warning");
                 if (registerMessage) {
-                    registerMessage.textContent = "Please fill in all fields.";
+                    registerMessage.textContent = "Authentication service initializing. Please retry in a moment.";
                     registerMessage.className = "message text-red";
                 }
                 return;
             }
 
-            if (!email.toLowerCase().endsWith("@nitrkl.ac.in")) {
+            const name = document.getElementById("registerName")?.value.trim();
+            const email = document.getElementById("registerEmail")?.value.trim();
+            const rollNumber = document.getElementById("rollNumber")?.value.trim() || "";
+            const role = registerRoleSelect?.value || "student";
+            const password = registerPasswordInput?.value;
+
+            if (!name || !email || !password) {
                 if (registerMessage) {
-                    registerMessage.textContent = "Please use your official @nitrkl.ac.in email address.";
+                    registerMessage.textContent = "Please fill in your full name, email, and password.";
                     registerMessage.className = "message text-red";
                 }
-                if (window.CampusCare) CampusCare.toast("Official @nitrkl.ac.in email required.", "warning");
+                if (window.CampusCare) CampusCare.toast("Full name, email, and password are required.", "warning");
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                if (registerMessage) {
+                    registerMessage.textContent = "Please enter a valid email address.";
+                    registerMessage.className = "message text-red";
+                }
+                if (window.CampusCare) CampusCare.toast("Please enter a valid email address.", "warning");
                 return;
             }
 
@@ -210,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     registerMessage.textContent = "Password must be at least 6 characters long.";
                     registerMessage.className = "message text-red";
                 }
+                if (window.CampusCare) CampusCare.toast("Password must be at least 6 characters.", "warning");
                 return;
             }
 
@@ -221,14 +266,16 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             try {
-                const { data, error } = await supabaseClient.auth.signUp({
+                const assignedRoll = rollNumber || (role === 'teacher' ? 'FAC-' + Math.floor(1000 + Math.random() * 9000) : '124CS' + Math.floor(1000 + Math.random() * 9000));
+
+                const { data, error } = await client.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         data: {
                             full_name: name,
-                            roll_number: rollNumber,
-                            role: 'student'
+                            roll_number: assignedRoll,
+                            role: role
                         }
                     }
                 });
@@ -236,26 +283,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (error) throw error;
 
                 if (registerMessage) {
-                    registerMessage.textContent = "Account created successfully! You can now sign in.";
+                    registerMessage.textContent = "Account created successfully! Redirecting to your dashboard...";
                     registerMessage.className = "message text-green font-bold";
                 }
 
                 if (window.CampusCare) {
-                    CampusCare.toast("Account created successfully! Please sign in.", "success", 4000);
+                    CampusCare.toast("Account created! Redirecting...", "success", 3000);
                 }
 
                 registerForm.reset();
                 if (passwordStrength) passwordStrength.dataset.level = "0";
 
-                // Automatically switch to sign-in view after a short delay
+                // Automatically redirect to the respective dashboard
                 setTimeout(() => {
-                    if (registerSection && loginSection) {
-                        registerSection.classList.add("hidden");
-                        loginSection.classList.remove("hidden");
-                        const emailInput = document.getElementById("email");
-                        if (emailInput) emailInput.value = email;
+                    const userRole = data?.user?.role || data?.user?.user_metadata?.role || role;
+                    if (userRole === 'teacher' || userRole === 'admin') {
+                        window.location.href = "teacher-dashboard.html";
+                    } else {
+                        window.location.href = "dashboard.html";
                     }
-                }, 1000);
+                }, 800);
 
             } catch (err) {
                 console.error("Sign up failed:", err);
@@ -279,6 +326,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (forgotPasswordBtn) {
         forgotPasswordBtn.addEventListener("click", async (e) => {
             e.preventDefault();
+            const client = getAuthClient();
+            if (!client) {
+                if (window.CampusCare) CampusCare.toast("Authentication service unavailable.", "error");
+                return;
+            }
+
             const email = emailInput?.value.trim();
 
             if (!email) {
@@ -291,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 const redirectUrl = window.location.origin + "/reset-password.html";
-                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                const { error } = await client.auth.resetPasswordForEmail(email, {
                     redirectTo: redirectUrl
                 });
 

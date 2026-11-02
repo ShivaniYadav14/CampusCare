@@ -134,8 +134,8 @@
             <div id="registerSection" class="hidden">
                 <div class="auth-header">
                     <span class="welcome">New Registration</span>
-                    <h2>Create Student Account</h2>
-                    <p>Sign up using your NIT Rourkela student credentials.</p>
+                    <h2>Create Your Account</h2>
+                    <p>Sign up using your institutional or personal credentials.</p>
                 </div>
 
                 <form id="registerForm" novalidate>
@@ -145,13 +145,21 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="registerEmail" class="form-label">Student Email</label>
-                        <input type="email" id="registerEmail" class="form-input" placeholder="rollnumber@nitrkl.ac.in" autocomplete="email" required>
+                        <label for="registerRole" class="form-label">Account Role</label>
+                        <select id="registerRole" class="form-input" style="cursor: pointer;">
+                            <option value="student" selected>Student</option>
+                            <option value="teacher">Faculty / Authority</option>
+                        </select>
                     </div>
 
                     <div class="input-group">
-                        <label for="rollNumber" class="form-label">Roll Number</label>
-                        <input type="text" id="rollNumber" class="form-input font-mono" placeholder="e.g. 124CS0001" autocomplete="off" required>
+                        <label for="registerEmail" class="form-label">Email Address</label>
+                        <input type="email" id="registerEmail" class="form-input" placeholder="e.g. 125cs0157@nitrkl.ac.in or personal email" autocomplete="email" required>
+                    </div>
+
+                    <div class="input-group" id="rollNumberGroup">
+                        <label for="rollNumber" class="form-label" id="rollNumberLabel">Roll Number / ID</label>
+                        <input type="text" id="rollNumber" class="form-input font-mono" placeholder="e.g. 124CS0001 (optional for faculty)" autocomplete="off">
                     </div>
 
                     <div class="input-group">
